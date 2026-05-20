@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wilmott QF 09 &mdash; Exotic and Path-dependent Options</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a; --bg-card: #0d1117; --bg-code: #161b22;
+            --text-primary: #e6edf3; --text-secondary: #8b949e;
+            --accent: #fbbf24; --accent-dim: #fbbf2444; --accent-glow: #fbbf2433;
+            --accent-2: #f472b6; --accent-3: #a78bfa; --accent-4: #34d399;
+            --accent-5: #60a5fa;
+            --border: #21262d;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --font-body: 'Inter', sans-serif;
+            --max-width: 900px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-body); font-size: 17px; line-height: 1.7; overflow-x: hidden; }
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem 1.5rem; text-align: center; position: relative; }
+        .hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 700px; height: 600px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+        .hero > * { position: relative; z-index: 1; }
+        .series-label { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1rem; }
+        .hero h1 { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; color: var(--text-primary); line-height: 1.2; margin-bottom: 1rem; }
+        .hero h1 .accent { color: var(--accent); }
+        .hero .subtitle { font-size: 1.1rem; color: var(--text-secondary); max-width: 640px; margin-bottom: 2rem; }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2.5rem; }
+        .tag { font-family: var(--font-mono); font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); background: var(--accent-dim); white-space: nowrap; }
+        .pipeline { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.25rem; margin-bottom: 1rem; max-width: var(--max-width); }
+        .pipeline-step { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.3rem 0.7rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); white-space: nowrap; }
+        .pipeline-arrow { color: var(--accent); font-size: 0.9rem; font-weight: 700; }
+        .slide { min-height: 100vh; max-width: var(--max-width); margin: 0 auto; padding: 4rem 1.5rem; position: relative; display: flex; flex-direction: column; justify-content: center; }
+        .slide-number { font-family: var(--font-display); font-size: 5rem; font-weight: 700; color: var(--accent-dim); position: absolute; top: 2rem; right: 1.5rem; line-height: 1; user-select: none; }
+        .slide h2 { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; color: var(--accent); margin-bottom: 1.5rem; line-height: 1.25; }
+        .slide h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        .slide p { margin-bottom: 1rem; color: var(--text-secondary); }
+        .slide p strong { color: var(--text-primary); }
+        .slide ul, .slide ol { margin-bottom: 1rem; padding-left: 1.5rem; color: var(--text-secondary); }
+        .slide li { margin-bottom: 0.4rem; }
+        .slide li strong { color: var(--text-primary); }
+        .slide code { background: var(--bg-code); padding: 0.1rem 0.35rem; border-radius: 3px; font-family: var(--font-mono); font-size: 0.85em; color: var(--accent); }
+        .diagram-grid { display: grid; gap: 0.75rem; margin: 1.5rem 0; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+        .diagram-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .diagram-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .diagram-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .diagram-panel { padding: 1rem; background: var(--bg-code); border: 1px solid var(--border); border-radius: 6px; }
+        .diagram-panel.accent-border { border-left: 3px solid var(--accent); }
+        .diagram-panel.r { border-left: 3px solid var(--accent-2); }
+        .diagram-panel.p { border-left: 3px solid var(--accent-3); }
+        .diagram-panel.g { border-left: 3px solid var(--accent-4); }
+        .diagram-panel.b { border-left: 3px solid var(--accent-5); }
+        .diagram-panel h4 { font-family: var(--font-display); font-size: 1rem; color: var(--accent); margin-bottom: 0.5rem; }
+        .diagram-panel.r h4 { color: var(--accent-2); }
+        .diagram-panel.p h4 { color: var(--accent-3); }
+        .diagram-panel.g h4 { color: var(--accent-4); }
+        .diagram-panel.b h4 { color: var(--accent-5); }
+        .diagram-panel p, .diagram-panel ul { font-size: 0.9rem; }
+        .callout { background: var(--bg-card); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+        .callout p { margin-bottom: 0; }
+        .callout .callout-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+        .quote { font-family: var(--font-display); font-size: 1.1rem; font-style: italic; color: var(--text-primary); padding: 1rem 1.5rem; border-left: 3px solid var(--accent); background: var(--bg-card); margin: 1.25rem 0; border-radius: 0 8px 8px 0; }
+        .quote .attr { display: block; margin-top: 0.5rem; font-style: normal; font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font-mono); }
+        .canvas-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin: 1.25rem 0; overflow-x: auto; }
+        .canvas-wrap canvas, .canvas-wrap svg { display: block; margin: 0 auto; max-width: 100%; }
+        .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.25rem 0; }
+        .control-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .control-row label { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); min-width: 160px; }
+        .control-row input[type="range"] { flex: 1; min-width: 150px; accent-color: var(--accent); }
+        .control-row select, .control-row input[type="number"] { background: var(--bg-code); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; padding: 0.3rem 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; }
+        .control-row .val { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); min-width: 80px; text-align: right; }
+        .btn { font-family: var(--font-mono); font-size: 0.8rem; padding: 0.4rem 0.9rem; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; cursor: pointer; transition: background 0.15s ease; }
+        .btn:hover { background: rgba(251,191,36,0.25); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn.secondary { background: var(--bg-code); color: var(--text-secondary); border-color: var(--border); }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
+        .metric { background: var(--bg-code); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; text-align: center; }
+        .metric .metric-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+        .metric .metric-value { font-family: var(--font-display); font-size: 1.25rem; color: var(--accent); font-weight: 600; margin-top: 0.2rem; }
+        .contents-list { list-style: none; padding-left: 0; counter-reset: contents; }
+        .contents-list li { counter-increment: contents; padding: 0.6rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+        .contents-list li:last-child { border-bottom: none; }
+        .contents-list li::before { content: counter(contents, decimal-leading-zero); font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); min-width: 2rem; }
+        .contents-list a { color: var(--text-primary); text-decoration: none; }
+        .contents-list a:hover { color: var(--accent); }
+        .footer { text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary); font-size: 0.85rem; border-top: 1px solid var(--border); max-width: var(--max-width); margin: 0 auto; }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .katex { color: var(--text-primary); }
+        .katex-display { margin: 1rem 0; overflow-x: auto; overflow-y: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1rem 0; }
+        th { background: var(--bg-code); color: var(--accent); font-weight: 600; text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); font-family: var(--font-display); }
+        td { padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: rgba(13, 17, 23, 0.5); }
+        @media (max-width: 640px) {
+            .slide { padding: 3rem 1rem; min-height: auto; }
+            .slide-number { font-size: 3rem; top: 1.5rem; right: 1rem; }
+            .slide h2 { font-size: 1.5rem; }
+            .diagram-grid.cols-2, .diagram-grid.cols-3, .diagram-grid.cols-4 { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="series-label">Paul Wilmott Introduces Quantitative Finance &mdash; Deck 09</div>
+    <h1>Exotic and <span class="accent">Path-dependent</span> Options</h1>
+    <p class="subtitle">A taxonomy of contracts whose payoff depends on the whole path &mdash; barriers, Asians, lookbacks &mdash; and the dimensionality penalty that comes with them.</p>
+
+    <div class="tags">
+        <span class="tag">taxonomy</span><span class="tag">barriers</span>
+        <span class="tag">Asians</span><span class="tag">lookbacks</span>
+        <span class="tag">compounds</span><span class="tag">choosers</span>
+        <span class="tag">strong path-dep</span><span class="tag">weak path-dep</span>
+    </div>
+
+    <div class="pipeline">
+        <span class="pipeline-step">vanilla $\max(S_T-K,0)$</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">payoff $f(\{S_t\}_{0\le t\le T})$</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">path dependence</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">extra state</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">MC or higher-D PDE</span>
+    </div>
+</header>
+
+<section class="slide" id="slide-00">
+    <div class="slide-number">00</div>
+    <h2>Topics We'll Cover</h2>
+    <ul class="contents-list">
+        <li><a href="#slide-01">Wilmott's option taxonomy</a></li>
+        <li><a href="#slide-02">Time-dependence &mdash; multiple exercises, payoffs</a></li>
+        <li><a href="#slide-03">Cashflows &mdash; dividends, coupons, rebates</a></li>
+        <li><a href="#slide-04">Strong vs weak path dependence</a></li>
+        <li><a href="#slide-05">Compounds, choosers, range notes</a></li>
+        <li><a href="#slide-06">Barrier options &mdash; the eight types</a></li>
+        <li><a href="#slide-07">PDE pricing for barriers</a></li>
+        <li><a href="#slide-08">Asian options &mdash; average-strike vs average-rate</a></li>
+        <li><a href="#slide-09">Lookbacks, Parisians, soft barriers</a></li>
+        <li><a href="#slide-10">Interactive: barrier-option Monte Carlo</a></li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-01">
+    <div class="slide-number">01</div>
+    <h2>Wilmott's Option Taxonomy</h2>
+    <p>A vanilla European call has a payoff that depends only on $S_T$. Everything else is, in Wilmott's language, <em>exotic</em>. Chapter 11 organises the zoo along six axes &mdash; a useful way to read any new payoff specification.</p>
+
+    <div class="diagram-grid cols-3">
+        <div class="diagram-panel accent-border">
+            <h4>1. Time dependence</h4>
+            <p>How does the contract depend on time? One exercise date (European), one of many (Bermudan), any time (American), or multiple payoff dates (cliquet)?</p>
+        </div>
+        <div class="diagram-panel r">
+            <h4>2. Cashflows</h4>
+            <p>Discrete dividends on the underlying, coupons on the contract, rebates on knock-out events. Any cash that moves between counterparties before $T$.</p>
+        </div>
+        <div class="diagram-panel p">
+            <h4>3. Path dependence</h4>
+            <p>Does the payoff use only $S_T$ (none), or some functional of the whole path? Average (Asian), extreme (lookback), barrier-cross (knock-out)?</p>
+        </div>
+        <div class="diagram-panel b">
+            <h4>4. Dimensionality</h4>
+            <p>One underlying or many? How many state variables does the pricing PDE need &mdash; the underlyings plus any path-dependent "augmenting" variables?</p>
+        </div>
+        <div class="diagram-panel g">
+            <h4>5. Order</h4>
+            <p>Is the underlying itself an option? Compound options (calls on calls) and chooser options live here. Pricing nests one BS calculation inside another.</p>
+        </div>
+        <div class="diagram-panel accent-border">
+            <h4>6. Embedded decisions</h4>
+            <p>Does someone &mdash; the holder, the issuer &mdash; get to choose? American exercise, callable bonds, voluntary conversion. Turns the PDE into a free-boundary problem.</p>
+        </div>
+    </div>
+
+    <p>A given exotic typically sits at a single point in this space. "Bermudan callable convertible bond" reads off as: discrete time, multiple cashflows (coupons), embedded decisions (call and conversion), two underlyings (rates and equity). Each axis costs you something computationally.</p>
+</section>
+
+<section class="slide" id="slide-02">
+    <div class="slide-number">02</div>
+    <h2>Time Dependence</h2>
+    <p>The temporal structure of an option has more dimensions than "European vs American."</p>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel accent-border">
+            <h4>Multiple exercise opportunities</h4>
+            <ul>
+                <li><strong>European:</strong> one date $T$.</li>
+                <li><strong>Bermudan:</strong> a discrete set $\{T_1, \dots, T_n\}$.</li>
+                <li><strong>American:</strong> any $\tau \in [0, T]$.</li>
+            </ul>
+            <p>American and Bermudan turn the PDE into a free-boundary problem &mdash; the optimal exercise boundary $S^*(t)$ is part of the answer.</p>
+        </div>
+        <div class="diagram-panel g">
+            <h4>Multiple payoff dates</h4>
+            <ul>
+                <li><strong>Cliquet:</strong> a series of forward-starting calls that pay $\max(S_{T_{i+1}}/S_{T_i} - 1, 0)$ at each reset.</li>
+                <li><strong>Range accrual:</strong> coupon accrues each day $S$ is in a range.</li>
+                <li><strong>Asian:</strong> single payoff but built from many observations.</li>
+            </ul>
+        </div>
+    </div>
+
+    <p>The total number of "events" &mdash; observation dates, exercise dates, cashflow dates &mdash; sets the cost of any discretised pricing scheme. A daily-observed Asian over a year is $252$ observations; an annual cliquet over $5$ years is $5$ resets but each is a separate forward-start option.</p>
+</section>
+
+<section class="slide" id="slide-03">
+    <div class="slide-number">03</div>
+    <h2>Cashflows</h2>
+    <p>Anywhere between today and $T$, money can move. The PDE has to absorb each cashflow as a boundary condition at that instant.</p>
+
+    <div class="diagram-grid cols-3">
+        <div class="diagram-panel p">
+            <h4>Discrete dividends</h4>
+            <p>At each ex-dividend date $t_d$, $S$ drops by $D_d$. The option value is continuous across the jump: $V(S, t_d^-) = V(S - D_d, t_d^+)$.</p>
+        </div>
+        <div class="diagram-panel b">
+            <h4>Continuous coupons</h4>
+            <p>If the option pays a coupon stream $c(S,t)$, the PDE picks up an extra term: $V_t + \tfrac{1}{2}\sigma^2 S^2 V_{SS} + rSV_S - rV + c = 0$.</p>
+        </div>
+        <div class="diagram-panel r">
+            <h4>Barrier rebates</h4>
+            <p>A knock-out can pay a cash rebate $R$ when it knocks out &mdash; consolation money to the holder, set at $V = R$ on the barrier.</p>
+        </div>
+    </div>
+
+    <div class="callout">
+        <div class="callout-label">Worth pausing on</div>
+        <p>Every cashflow is, structurally, just a boundary condition. The whole machinery of derivative pricing is the BS PDE solved on a domain with the right conditions at the right places. Exotic contracts are not exotic equations &mdash; they are familiar equations with elaborate boundaries.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-04">
+    <div class="slide-number">04</div>
+    <h2>Strong vs Weak Path Dependence</h2>
+    <p>Wilmott's most important distinction in this chapter. Both apply to path-dependent payoffs &mdash; the question is whether you can fold the path dependence into the existing state space.</p>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel r">
+            <h4>Strong path dependence</h4>
+            <p>Need an extra state variable to track the path-dependent quantity. The PDE moves from $V(S,t)$ to $V(S, I, t)$ where $I$ is the running average / max / sum.</p>
+            <ul>
+                <li><strong>Asians:</strong> running average $A_t = \tfrac{1}{t}\!\int_0^t S_u\,du$.</li>
+                <li><strong>Lookbacks:</strong> running max $M_t = \sup_{u\le t} S_u$.</li>
+                <li><strong>Variance swaps:</strong> realised variance.</li>
+            </ul>
+            <p>Three-dimensional PDE. Computationally an order of magnitude harder.</p>
+        </div>
+        <div class="diagram-panel g">
+            <h4>Weak path dependence</h4>
+            <p>The history changes the <em>boundary</em> or stops the contract entirely, but doesn't add a continuous state variable.</p>
+            <ul>
+                <li><strong>Barriers:</strong> if $S$ touches $B$, payoff jumps to a known value (zero, or rebate). Otherwise live as a vanilla.</li>
+                <li><strong>Bermudan exercise:</strong> the discrete dates change the boundary at each.</li>
+            </ul>
+            <p>Two-dimensional PDE with modified boundary. Same cost as vanilla pricing.</p>
+        </div>
+    </div>
+
+    <p>The distinction tells you, before you write a line of code, whether the problem is one curse-of-dimensionality worse than vanilla pricing or merely a more elaborate boundary condition. It also tells you whether closed-form solutions are likely to exist &mdash; weak path dependence often admits them; strong rarely does.</p>
+</section>
+
+<section class="slide" id="slide-05">
+    <div class="slide-number">05</div>
+    <h2>Compounds, Choosers, Range Notes</h2>
+    <p>A small gallery of structures that illustrate the taxonomy in action.</p>
+
+    <div class="diagram-grid cols-3">
+        <div class="diagram-panel p">
+            <h4>Compound options</h4>
+            <p>An option <em>on</em> an option. Pay $K_1$ at $T_1$ to receive a vanilla option struck at $K_2$ maturing at $T_2 > T_1$. Closed-form (Geske 1979) using bivariate normal CDFs.</p>
+            <p>Used to defer commitment &mdash; pay for optionality on optionality.</p>
+        </div>
+        <div class="diagram-panel b">
+            <h4>Chooser options</h4>
+            <p>At date $T_c$, the holder picks: this option is now a call, or it is now a put. From $T_c$ onward it's a vanilla.</p>
+            <p>Worth more than a vanilla, less than a straddle &mdash; the holder pays for delayed commitment.</p>
+        </div>
+        <div class="diagram-panel g">
+            <h4>Range notes</h4>
+            <p>Pay a coupon each day that $S$ lies in $[L, U]$. Total payoff at $T$ is the sum of in-range days $\times$ coupon.</p>
+            <p>Weakly path dependent &mdash; an extra accumulator state, but no extra continuous variable.</p>
+        </div>
+    </div>
+
+    <p>Each of these can be priced by nesting Black&ndash;Scholes once or twice, or by a 2D PDE in $(S,t)$ &mdash; nothing the toolkit doesn't already handle. They're "exotic" only in payoff, not in maths.</p>
+</section>
+
+<section class="slide" id="slide-06">
+    <div class="slide-number">06</div>
+    <h2>Barrier Options &mdash; The Eight Types</h2>
+    <p>A <strong>barrier option</strong> is a vanilla option that turns on (in) or off (out) if the underlying touches a level $B$ before maturity. There are eight standard variants, generated by three binary choices.</p>
+
+    <table>
+        <thead><tr><th></th><th>call</th><th>put</th></tr></thead>
+        <tbody>
+            <tr><td><strong>up-and-in</strong></td><td>activates when $S$ hits $B>S_0$</td><td>activates when $S$ hits $B>S_0$</td></tr>
+            <tr><td><strong>up-and-out</strong></td><td>cancels when $S$ hits $B>S_0$</td><td>cancels when $S$ hits $B>S_0$</td></tr>
+            <tr><td><strong>down-and-in</strong></td><td>activates when $S$ hits $B<S_0$</td><td>activates when $S$ hits $B<S_0$</td></tr>
+            <tr><td><strong>down-and-out</strong></td><td>cancels when $S$ hits $B<S_0$</td><td>cancels when $S$ hits $B<S_0$</td></tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <div class="callout-label">In&ndash;out parity</div>
+        <p>For any pair sharing barrier, strike and maturity: $\text{vanilla} = \text{up-and-in} + \text{up-and-out}$. Either both knock-out paths cancel and the in pays nothing, or the knock-out cancels and the in activates &mdash; in both cases exactly one of the two pays. So pricing one of the pair gives you the other for free.</p>
+    </div>
+
+    <p>Closed-form prices exist for all eight under GBM (Rubinstein&ndash;Reiner 1991), but they're long &mdash; products of normal CDFs at modified arguments involving $\ln(B/S_0)$ and $\ln(B^2/(S_0 K))$. In practice traders use them as a sanity check; for stochastic-vol models you go to PDE or Monte Carlo.</p>
+</section>
+
+<section class="slide" id="slide-07">
+    <div class="slide-number">07</div>
+    <h2>PDE Pricing for Barriers</h2>
+    <p>A <strong>knock-out barrier</strong> is the cleanest example of weak path dependence and the cleanest PDE problem after vanilla.</p>
+
+    <p>Take an up-and-out call with strike $K$ and barrier $B > K$. The option value $V(S, t)$ satisfies the Black&ndash;Scholes PDE</p>
+    <p>$$\frac{\partial V}{\partial t} + \tfrac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0$$</p>
+    <p>on the strip $\{0 \le S < B,\; 0 \le t \le T\}$, with boundary conditions</p>
+
+    <div class="diagram-grid cols-3">
+        <div class="diagram-panel accent-border">
+            <h4>Terminal</h4>
+            <p>$$V(S, T) = \max(S - K, 0)$$</p>
+        </div>
+        <div class="diagram-panel r">
+            <h4>Barrier (knock-out)</h4>
+            <p>$$V(B, t) = 0 \;\;\text{for all }t$$</p>
+            <p>(or $V = R$, the rebate.)</p>
+        </div>
+        <div class="diagram-panel g">
+            <h4>Lower edge</h4>
+            <p>$$V(0, t) = 0$$ (call worthless at zero spot)</p>
+        </div>
+    </div>
+
+    <p>Solving on the truncated domain is no harder than vanilla &mdash; same finite-difference scheme, just stop one grid point earlier in $S$. The same PDE on $\{S > B\}$ with terminal $\max(S-K,0)$ would price a down-and-out call.</p>
+
+    <h3>Knock-ins by parity</h3>
+    <p>For the corresponding knock-in, use in&ndash;out parity: $V_{\text{in}} = V_{\text{vanilla}} - V_{\text{out}}$. No second PDE solve needed.</p>
+
+    <div class="callout">
+        <div class="callout-label">A subtlety: discrete monitoring</div>
+        <p>Real contracts often monitor the barrier only at discrete observation times (daily close, monthly fixing). Continuous-monitoring closed forms overprice the knock-out / underprice the knock-in. The Broadie&ndash;Glasserman&ndash;Kou correction shifts the barrier by $\sigma\sqrt{\Delta t}\cdot 0.5826$ to recover the discrete price &mdash; a beautiful little adjustment.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-08">
+    <div class="slide-number">08</div>
+    <h2>Asian Options</h2>
+    <p>The payoff depends on a <strong>time average</strong> of $S$, not the terminal value. Two axes:</p>
+
+    <div class="diagram-grid cols-2">
+        <div class="diagram-panel p">
+            <h4>Average-rate (a.k.a. average-price)</h4>
+            <p>$$\text{payoff} = \max(A - K, 0)$$</p>
+            <p>The average $A$ replaces the spot in a vanilla payoff. Cheaper than a vanilla because the average is less volatile than $S_T$.</p>
+        </div>
+        <div class="diagram-panel b">
+            <h4>Average-strike</h4>
+            <p>$$\text{payoff} = \max(S_T - A, 0)$$</p>
+            <p>The average replaces the strike. Pays off when the terminal price exceeds the rolling average &mdash; a relative-performance call.</p>
+        </div>
+    </div>
+
+    <h3>Arithmetic vs geometric</h3>
+    <p>The average can be arithmetic (the natural one)</p>
+    <p>$$A_{\text{arith}} = \tfrac{1}{T}\!\int_0^T S_u\,du$$</p>
+    <p>or geometric</p>
+    <p>$$A_{\text{geom}} = \exp\!\left(\tfrac{1}{T}\!\int_0^T \ln S_u\,du\right).$$</p>
+
+    <p>The geometric average of a lognormal is itself lognormal, with</p>
+    <p>$$\mu_g = \tfrac{1}{2}(r - \tfrac{1}{2}\sigma^2)T, \quad \sigma_g^2 = \tfrac{1}{3}\sigma^2 T.$$</p>
+    <p>So geometric Asians admit a Black&ndash;Scholes-style closed form (Kemna&ndash;Vorst 1990). The arithmetic average is not lognormal &mdash; no closed form, and either Monte Carlo or the 3D PDE approach is required. A standard trick uses the geometric Asian as a <strong>control variate</strong> in MC, slashing variance by $90$%+.</p>
+
+    <div class="callout">
+        <div class="callout-label">Why traders like Asians</div>
+        <p>Cheaper than vanillas with the same strike, and far less manipulable around expiry &mdash; you can't push a stock for one print and book a profit. Common on commodity contracts where the relevant price is the monthly average, not a single fixing.</p>
+    </div>
+</section>
+
+<section class="slide" id="slide-09">
+    <div class="slide-number">09</div>
+    <h2>Lookbacks, Parisians, Soft Barriers</h2>
+    <p>A few of the wilder corners of the path-dependent zoo.</p>
+
+    <div class="diagram-grid cols-3">
+        <div class="diagram-panel accent-border">
+            <h4>Lookbacks</h4>
+            <p>Payoff $\max(S_T - m, 0)$ with $m = \min_{0\le t \le T} S_t$, the running minimum. Strongly path dependent: extra state $m$.</p>
+            <p>"Buy at the low, sell at the maturity." Closed form under GBM (Goldman&ndash;Sosin&ndash;Gatto 1979) &mdash; rare for strong-path-dep options.</p>
+        </div>
+        <div class="diagram-panel r">
+            <h4>Parisians</h4>
+            <p>Knock-out only if $S$ spends more than $\tau$ continuous units of time beyond the barrier &mdash; a single brief touch is no longer fatal.</p>
+            <p>Designed to defeat market manipulation. Extra state: time spent in the excursion. 3D PDE.</p>
+        </div>
+        <div class="diagram-panel p">
+            <h4>Soft barriers</h4>
+            <p>Knock-out occurs gradually over a range $[B_1, B_2]$ rather than at a point. Notional fades in (or out) linearly across the band.</p>
+            <p>Smooths the delta hedge &mdash; vanilla barriers have a delta that jumps wildly near $B$. Used in retail structured products.</p>
+        </div>
+    </div>
+
+    <p>Each is a deliberate response to a problem with simpler contracts &mdash; barriers can be manipulated (Parisians fix that), discrete monitoring is awkward (Asians soften it), barrier hedging is unstable (soft barriers tame it). The exotic universe grows by patching the failings of the previous generation.</p>
+</section>
+
+<section class="slide" id="slide-10">
+    <div class="slide-number">10</div>
+    <h2>Interactive: Barrier-option Monte Carlo</h2>
+    <p>Simulate GBM paths under risk-neutral dynamics:</p>
+    <p>$$S_{t+\Delta t} = S_t \exp\!\left[(r - \tfrac{1}{2}\sigma^2)\Delta t + \sigma\sqrt{\Delta t}\,Z\right], \quad Z \sim N(0,1).$$</p>
+    <p>A path is <em>killed</em> when it crosses the barrier $B$ (under continuous monitoring approximated by daily steps). Knock-out price is the discounted expectation of $\max(S_T - K, 0)$ over the <em>surviving</em> paths; knock-in is over the killed paths that ended in the money.</p>
+
+    <div class="canvas-wrap">
+        <canvas id="bar-canvas" width="780" height="320"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <div class="control-row">
+            <label for="bS-slider">Spot $S_0$</label>
+            <input type="range" id="bS-slider" min="50" max="150" step="1" value="100">
+            <span class="val" id="bS-val">100</span>
+        </div>
+        <div class="control-row">
+            <label for="bK-slider">Strike $K$</label>
+            <input type="range" id="bK-slider" min="50" max="150" step="1" value="100">
+            <span class="val" id="bK-val">100</span>
+        </div>
+        <div class="control-row">
+            <label for="bB-slider">Barrier $B$</label>
+            <input type="range" id="bB-slider" min="50" max="200" step="1" value="130">
+            <span class="val" id="bB-val">130</span>
+        </div>
+        <div class="control-row">
+            <label for="bT-slider">Maturity $T$ (years)</label>
+            <input type="range" id="bT-slider" min="0.1" max="3" step="0.05" value="1.00">
+            <span class="val" id="bT-val">1.00</span>
+        </div>
+        <div class="control-row">
+            <label for="bSig-slider">Volatility $\sigma$</label>
+            <input type="range" id="bSig-slider" min="0.05" max="0.80" step="0.005" value="0.25">
+            <span class="val" id="bSig-val">0.250</span>
+        </div>
+        <div class="control-row">
+            <label for="br-slider">Rate $r$ (%)</label>
+            <input type="range" id="br-slider" min="0" max="10" step="0.05" value="3.00">
+            <span class="val" id="br-val">3.00%</span>
+        </div>
+        <div class="control-row">
+            <label for="bN-slider">Paths $N$</label>
+            <input type="range" id="bN-slider" min="50" max="2000" step="50" value="500">
+            <span class="val" id="bN-val">500</span>
+        </div>
+        <div class="control-row">
+            <label for="bDir-sel">Up or Down barrier</label>
+            <select id="bDir-sel">
+                <option value="up" selected>up</option>
+                <option value="down">down</option>
+            </select>
+            <label for="bIO-sel" style="min-width:auto;">In/Out</label>
+            <select id="bIO-sel">
+                <option value="out" selected>knock-out</option>
+                <option value="in">knock-in</option>
+            </select>
+            <label for="bCP-sel" style="min-width:auto;">Call/Put</label>
+            <select id="bCP-sel">
+                <option value="call" selected>call</option>
+                <option value="put">put</option>
+            </select>
+        </div>
+        <div class="control-row">
+            <button class="btn" id="bRun-btn">Resample</button>
+        </div>
+        <div class="metric-grid">
+            <div class="metric"><div class="metric-label">MC price</div><div class="metric-value" id="bm-price">&mdash;</div></div>
+            <div class="metric"><div class="metric-label">Std error</div><div class="metric-value" id="bm-se">&mdash;</div></div>
+            <div class="metric"><div class="metric-label">% killed</div><div class="metric-value" id="bm-killed">&mdash;</div></div>
+            <div class="metric"><div class="metric-label">Vanilla BS</div><div class="metric-value" id="bm-bs">&mdash;</div></div>
+        </div>
+    </div>
+
+    <p>Watch the knock-out price fall (and the knock-in price rise) as the barrier approaches the spot. As $B \to \infty$ for an up barrier, the knock-out converges to the vanilla. For a tight up-and-out call ($B$ just above $K$) the price collapses &mdash; almost every winning path is killed before payoff.</p>
+</section>
+
+<footer class="footer">
+    <p>Deck 09 of the <a href="https://github.com/BrendanJamesLynskey/Wilmott_QF_Hub">Paul Wilmott Introduces Quantitative Finance &mdash; Companion Series</a>.</p>
+    <p style="margin-top: 0.6rem;">Companion to chapters 11 and 13 of <em>Paul Wilmott Introduces Quantitative Finance</em>, 2nd edition (Wiley, 2007).</p>
+</footer>
+
+<script>
+(function() {
+    const $ = id => document.getElementById(id);
+    function erf(x) {
+        const sign = x < 0 ? -1 : 1; x = Math.abs(x);
+        const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+        const t = 1/(1+p*x);
+        const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+        return sign*y;
+    }
+    function N(x) { return 0.5*(1+erf(x/Math.SQRT2)); }
+    function bsCallPut(S,K,T,r,sigma,isCall) {
+        if (sigma<=0 || T<=0) return Math.max((isCall?1:-1)*(S - K*Math.exp(-r*T)), 0);
+        const sT = sigma*Math.sqrt(T);
+        const d1 = (Math.log(S/K) + (r + 0.5*sigma*sigma)*T)/sT;
+        const d2 = d1 - sT;
+        return isCall ? S*N(d1) - K*Math.exp(-r*T)*N(d2)
+                      : K*Math.exp(-r*T)*N(-d2) - S*N(-d1);
+    }
+
+    // standard normal via Box-Muller
+    let _spare = null;
+    function randn() {
+        if (_spare !== null) { const v = _spare; _spare = null; return v; }
+        let u, v, s;
+        do { u = Math.random()*2-1; v = Math.random()*2-1; s = u*u+v*v; }
+        while (s >= 1 || s === 0);
+        const m = Math.sqrt(-2*Math.log(s)/s);
+        _spare = v*m;
+        return u*m;
+    }
+
+    const c = $('bar-canvas'), ctx = c.getContext('2d');
+    const ids = ['bS','bK','bB','bT','bSig','br','bN'];
+    const els = {};
+    ids.forEach(s => { els[s] = $(s+'-slider'); els[s+'v'] = $(s+'-val'); });
+    const dir = $('bDir-sel'), io = $('bIO-sel'), cp = $('bCP-sel');
+    const btn = $('bRun-btn');
+
+    function fmt(x, dp){ return x.toFixed(dp == null ? 3 : dp); }
+
+    function sim() {
+        const S0 = +els.bS.value, K = +els.bK.value, B = +els.bB.value;
+        const T = +els.bT.value, sigma = +els.bSig.value, r = +els.br.value/100;
+        const Npaths = +els.bN.value;
+        const steps = 100;
+        const dt = T/steps;
+        const drift = (r - 0.5*sigma*sigma)*dt;
+        const diff  = sigma*Math.sqrt(dt);
+        const isCall = cp.value==='call';
+        const isUp = dir.value==='up';
+        const isOut = io.value==='out';
+
+        els.bSv.textContent = S0.toFixed(0);
+        els.bKv.textContent = K.toFixed(0);
+        els.bBv.textContent = B.toFixed(0);
+        els.bTv.textContent = T.toFixed(2);
+        els.bSigv.textContent = sigma.toFixed(3);
+        els.brv.textContent = (+els.br.value).toFixed(2)+'%';
+        els.bNv.textContent = Npaths.toFixed(0);
+
+        // Path storage (downsampled for plot)
+        const plotPaths = Math.min(Npaths, 200);
+        const everyPath = Math.max(1, Math.floor(Npaths/plotPaths));
+        const paths = [];
+        const payoffs = [];
+        const killedFlags = [];
+        let killedCount = 0;
+
+        let Smin = S0, Smax = S0;
+
+        for (let p=0; p<Npaths; p++) {
+            const storeThis = (p % everyPath) === 0 && paths.length < plotPaths;
+            const path = storeThis ? new Float32Array(steps+1) : null;
+            if (path) path[0] = S0;
+            let S = S0;
+            let killed = false;
+            for (let i=1; i<=steps; i++) {
+                S = S * Math.exp(drift + diff*randn());
+                if (path) path[i] = S;
+                if (!killed) {
+                    if (isUp && S >= B) killed = true;
+                    else if (!isUp && S <= B) killed = true;
+                }
+                if (S < Smin) Smin = S;
+                if (S > Smax) Smax = S;
+            }
+            if (killed) killedCount++;
+            const payoffVanilla = isCall ? Math.max(S - K, 0) : Math.max(K - S, 0);
+            let payoff = 0;
+            if (isOut) payoff = killed ? 0 : payoffVanilla;
+            else       payoff = killed ? payoffVanilla : 0;
+            payoffs.push(payoff);
+            if (path) { paths.push(path); killedFlags.push(killed); }
+        }
+        const disc = Math.exp(-r*T);
+        let sum=0, sum2=0;
+        for (const p of payoffs) { sum += p; sum2 += p*p; }
+        const mean = sum/Npaths;
+        const variance = sum2/Npaths - mean*mean;
+        const se = disc*Math.sqrt(Math.max(variance,0)/Npaths);
+        const price = disc*mean;
+        const vanillaBS = bsCallPut(S0,K,T,r,sigma,isCall);
+
+        $('bm-price').textContent = price.toFixed(3);
+        $('bm-se').textContent = se.toFixed(3);
+        $('bm-killed').textContent = (100*killedCount/Npaths).toFixed(1)+'%';
+        $('bm-bs').textContent = vanillaBS.toFixed(3);
+
+        // ---- Plot ----
+        const W = c.width, H = c.height;
+        ctx.clearRect(0,0,W,H);
+        const padL=60, padR=20, padT=22, padB=42;
+        const plotW = W-padL-padR, plotH = H-padT-padB;
+        const yMin = Math.min(Smin, B)*0.95;
+        const yMax = Math.max(Smax, B)*1.05;
+        const x2px = i => padL + i/steps * plotW;
+        const y2px = s => padT + plotH - (s - yMin)/(yMax - yMin) * plotH;
+
+        // grid
+        ctx.strokeStyle = '#21262d'; ctx.lineWidth = 1;
+        for (let i=0;i<=5;i++) {
+            const x = padL + i/5*plotW;
+            ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+plotH); ctx.stroke();
+        }
+        for (let i=0;i<=4;i++) {
+            const y = padT + i/4*plotH;
+            ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+plotW, y); ctx.stroke();
+        }
+
+        // paths
+        for (let pi=0; pi<paths.length; pi++) {
+            const path = paths[pi];
+            const killed = killedFlags[pi];
+            ctx.strokeStyle = killed ? 'rgba(244,114,182,0.35)' : 'rgba(52,211,153,0.45)';
+            ctx.lineWidth = 0.7;
+            ctx.beginPath();
+            for (let i=0; i<=steps; i++) {
+                const x = x2px(i);
+                const y = y2px(path[i]);
+                if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            ctx.stroke();
+        }
+
+        // barrier line
+        ctx.strokeStyle = '#f472b6'; ctx.setLineDash([6,3]); ctx.lineWidth = 1.6;
+        const yB = y2px(B);
+        ctx.beginPath(); ctx.moveTo(padL, yB); ctx.lineTo(padL+plotW, yB); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // strike line
+        ctx.strokeStyle = '#a78bfa'; ctx.setLineDash([3,3]); ctx.lineWidth = 1.2;
+        const yK = y2px(K);
+        ctx.beginPath(); ctx.moveTo(padL, yK); ctx.lineTo(padL+plotW, yK); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // maturity vertical
+        ctx.strokeStyle = '#fbbf24'; ctx.setLineDash([2,4]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL+plotW, padT); ctx.lineTo(padL+plotW, padT+plotH); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // labels
+        ctx.fillStyle = '#f472b6'; ctx.font = '11px JetBrains Mono';
+        ctx.fillText('B = '+B.toFixed(0), padL+8, yB-4);
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText('K = '+K.toFixed(0), padL+8, yK-4);
+        ctx.fillStyle = '#8b949e';
+        ctx.fillText('t = 0', padL, H-padB+16);
+        ctx.fillText('t = T', padL+plotW-30, H-padB+16);
+        ctx.fillText('time t', padL+plotW/2-18, H-padB+30);
+        ctx.save(); ctx.translate(16, padT+plotH/2+40); ctx.rotate(-Math.PI/2);
+        ctx.fillText('underlying S(t)', 0, 0); ctx.restore();
+        // y ticks
+        ctx.fillText(yMax.toFixed(0), padL-32, padT+10);
+        ctx.fillText(yMin.toFixed(0), padL-32, padT+plotH);
+
+        // legend
+        ctx.fillStyle = '#34d399'; ctx.fillText('— survived', padL+8, padT+14);
+        ctx.fillStyle = '#f472b6'; ctx.fillText('— killed', padL+8, padT+30);
+    }
+
+    ids.forEach(s => els[s].addEventListener('input', sim));
+    dir.addEventListener('change', sim);
+    io.addEventListener('change', sim);
+    cp.addEventListener('change', sim);
+    btn.addEventListener('click', sim);
+    sim();
+})();
+</script>
+</body>
+</html>
