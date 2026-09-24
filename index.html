@@ -12,12 +12,12 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
     <style>
         :root {
-            --bg-primary: #0a0a0a; --bg-card: #0d1117; --bg-code: #161b22;
-            --text-primary: #e6edf3; --text-secondary: #8b949e;
-            --accent: #fbbf24; --accent-dim: #fbbf2444; --accent-glow: #fbbf2433;
-            --accent-2: #f472b6; --accent-3: #a78bfa; --accent-4: #34d399;
-            --accent-5: #60a5fa;
-            --border: #21262d;
+            --bg-primary: #eef1e8; --bg-card: #e6eadf; --bg-code: #dce1d3;
+            --text-primary: #1c292b; --text-secondary: #61695c;
+            --accent: #835a02; --accent-dim: #835a0244; --accent-glow: #835a021a;
+            --accent-2: #9c405e; --accent-3: #633d6a; --accent-4: #216749;
+            --accent-5: #2a4679;
+            --border: #cad1c0;
             --font-display: 'Space Grotesk', sans-serif;
             --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
             --font-body: 'Inter', sans-serif;
@@ -78,7 +78,7 @@
         .control-row select, .control-row input[type="number"] { background: var(--bg-code); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; padding: 0.3rem 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; }
         .control-row .val { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); min-width: 80px; text-align: right; }
         .btn { font-family: var(--font-mono); font-size: 0.8rem; padding: 0.4rem 0.9rem; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; cursor: pointer; transition: background 0.15s ease; }
-        .btn:hover { background: rgba(251,191,36,0.25); }
+        .btn:hover { background: rgba(131,90,2,0.25); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn.secondary { background: var(--bg-code); color: var(--text-secondary); border-color: var(--border); }
         .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; margin-top: 0.75rem; }
@@ -99,7 +99,7 @@
         th { background: var(--bg-code); color: var(--accent); font-weight: 600; text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); font-family: var(--font-display); }
         td { padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
         tr:last-child td { border-bottom: none; }
-        tr:nth-child(even) td { background: rgba(13, 17, 23, 0.5); }
+        tr:nth-child(even) td { background: rgba(230,234,223,0.5); }
         @media (max-width: 640px) {
             .slide { padding: 3rem 1rem; min-height: auto; }
             .slide-number { font-size: 3rem; top: 1.5rem; right: 1rem; }
@@ -620,7 +620,7 @@
         const y2px = s => padT + plotH - (s - yMin)/(yMax - yMin) * plotH;
 
         // grid
-        ctx.strokeStyle = '#21262d'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#cad1c0'; ctx.lineWidth = 1;
         for (let i=0;i<=5;i++) {
             const x = padL + i/5*plotW;
             ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT+plotH); ctx.stroke();
@@ -634,7 +634,7 @@
         for (let pi=0; pi<paths.length; pi++) {
             const path = paths[pi];
             const killed = killedFlags[pi];
-            ctx.strokeStyle = killed ? 'rgba(244,114,182,0.35)' : 'rgba(52,211,153,0.45)';
+            ctx.strokeStyle = killed ? 'rgba(156,64,94,0.35)' : 'rgba(33,103,73,0.45)';
             ctx.lineWidth = 0.7;
             ctx.beginPath();
             for (let i=0; i<=steps; i++) {
@@ -646,28 +646,28 @@
         }
 
         // barrier line
-        ctx.strokeStyle = '#f472b6'; ctx.setLineDash([6,3]); ctx.lineWidth = 1.6;
+        ctx.strokeStyle = '#9c405e'; ctx.setLineDash([6,3]); ctx.lineWidth = 1.6;
         const yB = y2px(B);
         ctx.beginPath(); ctx.moveTo(padL, yB); ctx.lineTo(padL+plotW, yB); ctx.stroke();
         ctx.setLineDash([]);
 
         // strike line
-        ctx.strokeStyle = '#a78bfa'; ctx.setLineDash([3,3]); ctx.lineWidth = 1.2;
+        ctx.strokeStyle = '#633d6a'; ctx.setLineDash([3,3]); ctx.lineWidth = 1.2;
         const yK = y2px(K);
         ctx.beginPath(); ctx.moveTo(padL, yK); ctx.lineTo(padL+plotW, yK); ctx.stroke();
         ctx.setLineDash([]);
 
         // maturity vertical
-        ctx.strokeStyle = '#fbbf24'; ctx.setLineDash([2,4]); ctx.lineWidth = 1;
+        ctx.strokeStyle = '#835a02'; ctx.setLineDash([2,4]); ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(padL+plotW, padT); ctx.lineTo(padL+plotW, padT+plotH); ctx.stroke();
         ctx.setLineDash([]);
 
         // labels
-        ctx.fillStyle = '#f472b6'; ctx.font = '11px JetBrains Mono';
+        ctx.fillStyle = '#9c405e'; ctx.font = '11px JetBrains Mono';
         ctx.fillText('B = '+B.toFixed(0), padL+8, yB-4);
-        ctx.fillStyle = '#a78bfa';
+        ctx.fillStyle = '#633d6a';
         ctx.fillText('K = '+K.toFixed(0), padL+8, yK-4);
-        ctx.fillStyle = '#8b949e';
+        ctx.fillStyle = '#61695c';
         ctx.fillText('t = 0', padL, H-padB+16);
         ctx.fillText('t = T', padL+plotW-30, H-padB+16);
         ctx.fillText('time t', padL+plotW/2-18, H-padB+30);
@@ -678,8 +678,8 @@
         ctx.fillText(yMin.toFixed(0), padL-32, padT+plotH);
 
         // legend
-        ctx.fillStyle = '#34d399'; ctx.fillText('— survived', padL+8, padT+14);
-        ctx.fillStyle = '#f472b6'; ctx.fillText('— killed', padL+8, padT+30);
+        ctx.fillStyle = '#216749'; ctx.fillText('— survived', padL+8, padT+14);
+        ctx.fillStyle = '#9c405e'; ctx.fillText('— killed', padL+8, padT+30);
     }
 
     ids.forEach(s => els[s].addEventListener('input', sim));
